@@ -86,3 +86,25 @@ def test_fetch_handles_missing_optional_fields():
     _, tracks = fetch_playlist(FakeClient([[item]]), PID)
     t = tracks[0]
     assert (t.isrc, t.year, t.cover_url) == (None, None, None)
+
+
+def test_fetch_accepts_renamed_items_shape():
+    class NewShapeClient:
+        def playlist(self, playlist_id, fields=None):
+            item = make_item(1)
+            return {"name": "New", "items": {"items": [{"item": item["track"], "is_local": False}], "next": None}}
+
+        def next(self, page):
+            raise AssertionError("no next page")
+
+    name, tracks = fetch_playlist(NewShapeClient(), PID)
+    assert name == "New" and tracks[0].title == "Song 1"
+
+
+def test_fetch_unknown_response_shape_raises_loudly():
+    class Odd:
+        def playlist(self, playlist_id, fields=None):
+            return {"name": "x", "weird": {}}
+
+    with pytest.raises(RuntimeError):
+        fetch_playlist(Odd(), PID)

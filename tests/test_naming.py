@@ -1,5 +1,5 @@
 from playlist_download.models import Track
-from playlist_download.naming import find_existing, sanitize, track_filename
+from playlist_download.naming import sanitize, track_filename
 
 
 def make_track(position=1, title="Title", artists=("Artist",)):
@@ -47,12 +47,10 @@ def test_duplicate_songs_get_distinct_names():
     assert a != b
 
 
-def test_find_existing_by_prefix(tmp_path):
-    f = tmp_path / "003 - A - B.mp3"
-    f.write_bytes(b"x")
-    assert find_existing(tmp_path, 3, 3) == f
-    assert find_existing(tmp_path, 4, 3) is None
+def test_track_filename_respects_max_stem():
+    name = track_filename(make_track(title="x" * 300), width=3, max_stem=60)
+    assert len(name[: -len(".mp3")]) <= 60
 
 
-def test_find_existing_missing_dir_returns_none(tmp_path):
-    assert find_existing(tmp_path / "nope", 1, 3) is None
+def test_sanitize_empty_result_falls_back():
+    assert sanitize("...") != ""

@@ -13,10 +13,6 @@ _PATTERNS = [
     re.compile(rf"^spotify:playlist:({_ID})$"),
     re.compile(rf"^({_ID})$"),
 ]
-_FIELDS = (
-    "name,tracks.next,tracks.items(is_local,track(type,name,duration_ms,explicit,is_local,"
-    "external_ids,artists(name),album(name,release_date,images)))"
-)
 
 
 def parse_playlist_id(url_or_id: str) -> str:
@@ -34,7 +30,7 @@ def make_client(config: Config) -> spotipy.Spotify:
 
 
 def _to_track(position: int, item: dict) -> Track | None:
-    track = item.get("track")
+    track = item.get("track") or item.get("item")  # Spotify renamed track -> item in newer API versions
     if not track or item.get("is_local") or track.get("is_local") or track.get("type") != "track":
         return None
     album = track.get("album") or {}
@@ -54,8 +50,13 @@ def _to_track(position: int, item: dict) -> Track | None:
 
 
 def fetch_playlist(client, playlist_id: str) -> tuple[str, list[Track | None]]:
-    data = client.playlist(playlist_id, fields=_FIELDS)
-    page = data["tracks"]
+    data = client.playlist(playlist_id)
+    page = data.get("tracks") or data.get("items")  # newer API versions renamed tracks -> items
+    if not isinstance(page, dict) or "items" not in page:
+        raise RuntimeError(
+            f"Unexpected Spotify response: no track list found (keys: {sorted(data)}). "
+            "Spotify may have changed its API, or the app cannot read this playlist."
+        )
     tracks: list[Track | None] = []
     while True:
         for item in page["items"]:

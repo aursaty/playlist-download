@@ -37,7 +37,7 @@ def test_process_track_downloads_and_names_file(tmp_path):
 
 
 def test_process_track_skips_existing(tmp_path):
-    (tmp_path / "01 - Old Name.mp3").write_bytes(b"x")
+    (tmp_path / "01 - Artist - Title.mp3").write_bytes(b"x")
 
     def must_not_rank(track):
         raise AssertionError("rank called")
@@ -129,3 +129,48 @@ def test_main_writes_reports_and_returns_0_with_failures(monkeypatch, tmp_path):
     out = tmp_path / "My_ List_"
     assert "unavailable track" in (out / "failed.txt").read_text(encoding="utf-8")
     assert (out / "report.json").exists()
+
+
+def test_existing_file_for_other_song_at_same_position_is_not_skipped(tmp_path):
+    (tmp_path / "01 - Someone Else - Old Song.mp3").write_bytes(b"x")
+    result = run(tmp_path)
+    assert result.status == "downloaded"
+
+
+def test_os_error_on_replace_recorded_not_raised(tmp_path, monkeypatch):
+    def deny(src, dst):
+        raise PermissionError("file in use")
+
+    monkeypatch.setattr(app.os, "replace", deny)
+    result = run(tmp_path)
+    assert result.status == "failed"
+    assert result.reason.startswith("file error")
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_long_output_dir_shortens_filename(tmp_path):
+    deep = tmp_path / ("d" * 50) / ("e" * 50)
+    long_track = make_track(1)
+    long_track.title = "t" * 200
+    result = process_track(long_track, 1, 2, deep, 70, rank=lambda t: [cand(95)], download=good_download,
+                           tag=lambda p, t, c: None, cover=lambda u: None)
+    assert result.status == "downloaded"
+    (f,) = list(deep.iterdir())
+    assert len(str(f.resolve())) <= 255
+
+
+def test_main_writes_reports_on_keyboard_interrupt(monkeypatch, tmp_path):
+    monkeypatch.setattr(app, "check_ffmpeg", lambda: None)
+    monkeypatch.setattr(app, "load_config", lambda: Config("id", "uri"))
+    monkeypatch.setattr(app, "make_client", lambda cfg: object())
+    monkeypatch.setattr(app, "fetch_playlist", lambda client, pid: ("PL", [make_track(1), make_track(2)]))
+
+    def fake_process(track, position, width, out_dir, threshold, **kw):
+        if position == 2:
+            raise KeyboardInterrupt
+        return TrackResult(position, track, "failed", None, [], "no match above threshold")
+
+    monkeypatch.setattr(app, "process_track", fake_process)
+    code = app.main(["37i9dQZF1DXcBWIGoYBM5M", "--out", str(tmp_path)])
+    assert code == 130
+    assert "no match above threshold" in (tmp_path / "PL" / "failed.txt").read_text(encoding="utf-8")

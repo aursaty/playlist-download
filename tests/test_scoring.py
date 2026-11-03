@@ -75,3 +75,38 @@ def test_ytmusic_album_match_gives_bonus():
 def test_score_clamped_to_0_100():
     s = score_candidate(make_track(), make_cand(title="Blinding Lights live cover remix karaoke", channel="x"))
     assert 0 <= s <= 100
+
+
+def test_short_artist_name_is_not_substring_matched():
+    track = make_track(artists=("Sia",))
+    cand = make_cand(channel="Asia", title="Blinding Lights")
+    assert score_candidate(track, cand) < 70
+
+
+def test_live_only_upload_below_default_threshold():
+    track = make_track(title="Hello", artists=("Adele",), duration_ms=295000)
+    cand = make_cand(title="Hello (Live at the BBC)", channel="Adele - Topic", duration_s=296)
+    assert score_candidate(track, cand) < 70
+
+
+def test_different_remix_in_brackets_penalized():
+    track = make_track(title="Song (A Remix)", artists=("X",), duration_ms=200000)
+    cand = make_cand(title="Song (B Remix)", channel="X - Topic", duration_s=200)
+    assert score_candidate(track, cand) < 70
+
+
+def test_matching_remix_in_brackets_still_passes():
+    track = make_track(title="Song (A Remix)", artists=("X",), duration_ms=200000)
+    cand = make_cand(title="Song (A Remix)", channel="X - Topic", duration_s=200)
+    assert score_candidate(track, cand) >= 90
+
+
+def test_title_with_many_extra_words_is_not_a_perfect_match():
+    track = make_track(title="Intro", artists=("X",), duration_ms=200000)
+    cand = make_cand(title="Intro to the Outro (Interlude)", channel="X - Topic", duration_s=200)
+    assert score_candidate(track, cand) < 70
+
+
+def test_official_audio_suffix_not_penalized():
+    cand = make_cand(title="The Weeknd - Blinding Lights (Official Audio)", channel="The Weeknd")
+    assert score_candidate(make_track(), cand) >= 85
