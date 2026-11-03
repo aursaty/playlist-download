@@ -4,7 +4,8 @@ from pathlib import Path
 from playlist_download.models import Track
 
 MAX_STEM = 150
-_ILLEGAL = re.compile(r'[<>:"/\|?*\x00-\x1f]')
+_BACKSLASH = chr(92)
+_ILLEGAL = re.compile("[" + re.escape('<>:"/|?*' + _BACKSLASH) + r"\x00-\x1f]")
 _RESERVED = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 
 
