@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from playlist_download import main as app
@@ -141,7 +143,7 @@ def test_os_error_on_replace_recorded_not_raised(tmp_path, monkeypatch):
     def deny(src, dst):
         raise PermissionError("file in use")
 
-    monkeypatch.setattr(app.os, "replace", deny)
+    monkeypatch.setattr(os, "replace", deny)
     result = run(tmp_path)
     assert result.status == "failed"
     assert result.reason.startswith("file error")
