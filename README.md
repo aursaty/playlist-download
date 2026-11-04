@@ -81,8 +81,8 @@ zip with the finished playlist.
 python app.py                  # Windows without activating the venv: .venv\Scripts\python app.py
 ```
 
-Open http://127.0.0.1:8000 and press **connect spotify** once (the login happens in the page, token is
-stored in `.cache-web`). Then:
+Open http://127.0.0.1:8000. **Public playlists work right away, no login.** Press **connect spotify** (once,
+the login happens in the page and the token is stored in `.cache-web`) only to read your own private playlists. Then:
 
 1. Paste the playlist link and press **get the songs**.
 2. Songs that match confidently download by themselves. The rest appear as cards.
@@ -194,3 +194,21 @@ python -m pytest -q
 
 Note: a candidate whose artist does not appear in the video title or channel is capped at score 69,
 so a threshold below 69 can let wrong-artist matches through.
+
+## Public and private playlists
+
+Spotify only lets apps like this read the tracks of playlists that the logged-in user owns or collaborates on.
+Everyone else's playlists, public ones included, are refused by the API. So:
+
+| Playlist | How it is read | What you get |
+|---|---|---|
+| yours (private or public) | Spotify API, needs the login | full detail: album, year, cover, ISRC |
+| someone else's, public | the public embed page of the playlist, no login | title, artists, duration, explicit flag only; at most the first 100 songs |
+| someone else's, private | not possible | the app says so |
+
+Matching still works well on the reduced detail because duration and artist drive the score. The page tells
+you when the reduced source was used, and when a playlist reaches the 100 song limit. For a longer public
+playlist, add its songs to a playlist of your own in Spotify, then use that link.
+
+The embed page is a public web page rather than a documented API, so Spotify may change it. If public links
+suddenly stop working, that is the likely cause.

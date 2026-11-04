@@ -118,7 +118,7 @@ def test_main_writes_reports_and_returns_0_with_failures(monkeypatch, tmp_path):
     monkeypatch.setattr(app, "check_ffmpeg", lambda: None)
     monkeypatch.setattr(app, "load_config", lambda: Config("id", "uri"))
     monkeypatch.setattr(app, "make_client", lambda cfg: object())
-    monkeypatch.setattr(app, "fetch_playlist", lambda client, pid: ("My: List?", [make_track(1), None]))
+    monkeypatch.setattr(app, "fetch_playlist_any", lambda client, pid: ("My: List?", [make_track(1), None], "public page note"))
 
     def fake_process(track, position, width, out_dir, threshold, **kw):
         if track is None:
@@ -165,7 +165,7 @@ def test_main_writes_reports_on_keyboard_interrupt(monkeypatch, tmp_path):
     monkeypatch.setattr(app, "check_ffmpeg", lambda: None)
     monkeypatch.setattr(app, "load_config", lambda: Config("id", "uri"))
     monkeypatch.setattr(app, "make_client", lambda cfg: object())
-    monkeypatch.setattr(app, "fetch_playlist", lambda client, pid: ("PL", [make_track(1), make_track(2)]))
+    monkeypatch.setattr(app, "fetch_playlist_any", lambda client, pid: ("PL", [make_track(1), make_track(2)], ""))
 
     def fake_process(track, position, width, out_dir, threshold, **kw):
         if position == 2:
@@ -176,3 +176,13 @@ def test_main_writes_reports_on_keyboard_interrupt(monkeypatch, tmp_path):
     code = app.main(["37i9dQZF1DXcBWIGoYBM5M", "--out", str(tmp_path)])
     assert code == 130
     assert "no match above threshold" in (tmp_path / "PL" / "failed.txt").read_text(encoding="utf-8")
+
+
+def test_main_prints_notice_for_public_playlist(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(app, "check_ffmpeg", lambda: None)
+    monkeypatch.setattr(app, "load_config", lambda: Config("id", "uri"))
+    monkeypatch.setattr(app, "make_client", lambda cfg: object())
+    monkeypatch.setattr(app, "fetch_playlist_any", lambda client, pid: ("PL", [make_track(1)], "public page note"))
+    monkeypatch.setattr(app, "process_track", lambda t, p, w, o, th, **kw: TrackResult(p, t, "downloaded", None, [], None))
+    app.main(["37i9dQZF1DXcBWIGoYBM5M", "--out", str(tmp_path)])
+    assert "public page note" in capsys.readouterr().out

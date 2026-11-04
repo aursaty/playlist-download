@@ -133,10 +133,11 @@ def test_callback_error_shows_message(env):
     assert status == 400 and b"access_denied" in payload
 
 
-def test_start_requires_spotify_connection(env):
+def test_start_works_without_spotify_login_for_public_playlists(env):
     env["auth"]._connected = False
     status, body = call_json(env, "POST", "/api/jobs", {"url": URL})
-    assert status == 401 and "Spotify" in body["error"]
+    assert status == 202
+    assert wait_for(env, body["id"])["status"] in ("review", "done")
 
 
 def test_full_cycle_start_review_resolve_archive(env):

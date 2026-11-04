@@ -108,3 +108,135 @@ def test_fetch_unknown_response_shape_raises_loudly():
 
     with pytest.raises(RuntimeError):
         fetch_playlist(Odd(), PID)
+
+
+# ---- public playlists via the embed page ----
+import json as _json
+
+import spotipy as _spotipy
+
+from playlist_download.spotify import PlaylistUnavailable, fetch_playlist_any, parse_embed_html
+
+
+def embed_html(track_list, name="Public List", wrap=True):
+    entity = {"name": name, "title": name, "trackList": track_list}
+    data = {"props": {"pageProps": {"state": {"data": {"entity": entity}}}}}
+    body = _json.dumps(data, ensure_ascii=False)
+    return f'<html><script id="__NEXT_DATA__" type="application/json">{body}</script></html>' if wrap else body
+
+
+def embed_track(n, **kw):
+    t = {"uri": f"spotify:track:{n:022d}", "title": f"Song {n}", "subtitle": "Artist A, Artist B",
+         "isExplicit": n % 2 == 0, "duration": 200000 + n, "entityType": "track"}
+    t.update(kw)
+    return t
+
+
+def test_parse_embed_maps_tracks_and_splits_artists():
+    name, tracks = parse_embed_html(embed_html([embed_track(1), embed_track(2)]))
+    assert name == "Public List"
+    t = tracks[0]
+    assert (t.position, t.title, t.artists, t.duration_ms) == (1, "Song 1", ["Artist A", "Artist B"], 200001)
+    assert (t.album, t.isrc, t.year, t.cover_url, t.explicit) == ("", None, None, None, False)
+    assert tracks[1].explicit is True
+
+
+def test_parse_embed_keeps_positions_for_unusable_items():
+    items = [embed_track(1), embed_track(2, uri="spotify:episode:abc", entityType="episode"), embed_track(3)]
+    _, tracks = parse_embed_html(embed_html(items))
+    assert [t is None for t in tracks] == [False, True, False]
+    assert tracks[2].position == 3
+
+
+def test_parse_embed_unicode_titles_survive():
+    _, tracks = parse_embed_html(embed_html([embed_track(1, title="Море 🎵", subtitle="Скрябін")]))
+    assert tracks[0].title == "Море 🎵" and tracks[0].artists == ["Скрябін"]
+
+
+@pytest.mark.parametrize("html", ["<html>nothing here</html>", embed_html([], wrap=True).replace("trackList", "other"),
+                                  '<script id="__NEXT_DATA__" type="application/json">{not json</script>'])
+def test_parse_embed_unexpected_page_raises(html):
+    with pytest.raises(PlaylistUnavailable):
+        parse_embed_html(html)
+
+
+def official_ok(client, pid):
+    return "Mine", [make_item_track(1)]
+
+
+def make_item_track(n):
+    from playlist_download.models import Track
+    return Track(n, f"Official {n}", ["A"], "Album", 1000, "ISRC", 2020, False, "http://c")
+
+
+def embed_ok(pid):
+    return "Public", [make_item_track(1)]
+
+
+def spotify_error(status):
+    return _spotipy.SpotifyException(status, -1, "nope")
+
+
+def test_any_uses_official_when_logged_in_and_allowed():
+    calls = []
+    name, tracks, notice = fetch_playlist_any(object(), PID, fetch_official=official_ok,
+                                              fetch_embed=lambda p: calls.append(p) or embed_ok(p))
+    assert (name, notice, calls) == ("Mine", "", [])
+
+
+@pytest.mark.parametrize("status", [401, 403, 404])
+def test_any_falls_back_to_embed_when_spotify_refuses(status):
+    def refuse(client, pid):
+        raise spotify_error(status)
+
+    name, tracks, notice = fetch_playlist_any(object(), PID, fetch_official=refuse, fetch_embed=embed_ok)
+    assert name == "Public" and "public playlist page" in notice
+
+
+def test_any_falls_back_when_response_has_no_track_list():
+    def no_tracks(client, pid):
+        raise RuntimeError("Unexpected Spotify response")
+
+    assert fetch_playlist_any(object(), PID, fetch_official=no_tracks, fetch_embed=embed_ok)[0] == "Public"
+
+
+def test_any_other_spotify_errors_are_not_swallowed():
+    def rate_limited(client, pid):
+        raise spotify_error(429)
+
+    with pytest.raises(_spotipy.SpotifyException):
+        fetch_playlist_any(object(), PID, fetch_official=rate_limited, fetch_embed=embed_ok)
+
+
+def test_any_without_login_goes_straight_to_embed():
+    def must_not_run(client, pid):
+        raise AssertionError("official called without a client")
+
+    assert fetch_playlist_any(None, PID, fetch_official=must_not_run, fetch_embed=embed_ok)[0] == "Public"
+
+
+def test_any_embed_failure_without_login_asks_to_connect():
+    def broken(pid):
+        raise PlaylistUnavailable("page gone")
+
+    with pytest.raises(PlaylistUnavailable, match="(?i)connect spotify"):
+        fetch_playlist_any(None, PID, fetch_embed=broken)
+
+
+def test_any_embed_failure_with_login_explains_ownership_rule():
+    def refuse(client, pid):
+        raise spotify_error(403)
+
+    def broken(pid):
+        raise PlaylistUnavailable("page gone")
+
+    with pytest.raises(PlaylistUnavailable, match="own or collaborate"):
+        fetch_playlist_any(object(), PID, fetch_official=refuse, fetch_embed=broken)
+
+
+def test_any_warns_when_embed_list_may_be_truncated():
+    def full(pid):
+        return "Big", [make_item_track(i) for i in range(1, 101)]
+
+    notice = fetch_playlist_any(None, PID, fetch_embed=full)[2]
+    assert "first 100" in notice

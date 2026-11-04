@@ -76,15 +76,23 @@ def make_handler(ctx: AppContext):
             self._error(403, "Cross-origin request refused.")
             return False
 
+        def _drain(self):
+            """Read the request body up front, so an early error reply never resets the connection."""
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                length = 0
+            self._raw = self.rfile.read(length) if 0 < length <= MAX_BODY else b""
+            self._oversize = length > MAX_BODY
+
         def _body(self) -> dict | None:
             if not self.headers.get("Content-Type", "").startswith("application/json"):
                 self._error(415, "Send application/json.")
                 return None
             try:
-                length = int(self.headers.get("Content-Length", "0"))
-                if not 0 < length <= MAX_BODY:
+                if not self._raw or self._oversize:
                     raise ValueError
-                data = json.loads(self.rfile.read(length))
+                data = json.loads(self._raw)
                 if not isinstance(data, dict):
                     raise ValueError
                 return data
@@ -171,6 +179,7 @@ def make_handler(ctx: AppContext):
 
         # ---- POST
         def do_POST(self):
+            self._drain()
             if not (self._host_ok() and self._origin_ok()):
                 return
             path = urlparse(self.path).path
@@ -188,9 +197,6 @@ def make_handler(ctx: AppContext):
             self._error(404, "Not found.")
 
         def _start_job(self, body):
-            if not ctx.auth.connected():
-                self._error(401, "Connect Spotify first.")
-                return
             url, threshold = body.get("url"), body.get("threshold", 70.0)
             if not isinstance(url, str) or not url.strip():
                 self._error(400, "Paste a Spotify playlist link.")

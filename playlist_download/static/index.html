@@ -299,16 +299,16 @@ function startView() {
   const connected = state.auth && state.auth.connected;
   const input = h("input", {
     class: "input", type: "url", name: "playlist", id: "playlist", required: true, autocomplete: "off",
-    placeholder: "paste a spotify playlist link", "aria-label": "spotify playlist link", disabled: !connected || state.starting,
+    placeholder: "paste a spotify playlist link", "aria-label": "spotify playlist link", disabled: state.starting,
   });
   const form = h("form", { class: "field", onsubmit: (e) => { e.preventDefault(); if (input.value.trim()) startJob(input.value.trim()); } },
     input,
-    h("button", { class: "btn btn--primary", type: "submit", disabled: !connected || state.starting, text: state.starting ? "starting" : "get the songs" }));
+    h("button", { class: "btn btn--primary", type: "submit", disabled: state.starting, text: state.starting ? "starting" : "get the songs" }));
   return h("section", { class: "intro" },
     h("h1", { text: "paste a playlist, get the songs" }),
     h("p", { class: "lead", text: connected
-      ? "private playlists work. songs that cannot be matched on their own land in a swipe deck where you can listen and pick."
-      : "connect your spotify account first, so private playlists can be read." }),
+      ? "public and private playlists work. songs that cannot be matched on their own land in a swipe deck where you can listen and pick."
+      : "public playlists work right away. connect spotify to read your own private ones." }),
     form,
     h("p", { class: "fine", text: "files are saved on this machine as numbered mp3s, in playlist order." }),
     errorView());
@@ -461,6 +461,7 @@ function render() {
       h("div", { class: "actions" }, h("button", { class: "btn btn--primary", type: "button", text: "try again", onclick: reset }))));
   } else {
     view.push(errorView());
+    if (job.notice) view.push(h("p", { class: "fine", text: job.notice }));
     if (job.status === "starting" || job.status === "running") {
       view.push(progressView(job));
     } else {

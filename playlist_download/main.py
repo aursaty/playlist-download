@@ -6,7 +6,7 @@ from playlist_download.config import ConfigError, check_ffmpeg, load_config
 from playlist_download.naming import playlist_folder
 from playlist_download.pipeline import iter_pipeline, process_track
 from playlist_download.report import TrackResult, format_failed, summary, write_reports
-from playlist_download.spotify import fetch_playlist, make_client, parse_playlist_id
+from playlist_download.spotify import fetch_playlist_any, make_client, parse_playlist_id
 
 DEFAULT_THRESHOLD = 70.0
 
@@ -37,12 +37,14 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
-        name, tracks = fetch_playlist(make_client(config), playlist_id)
+        name, tracks, notice = fetch_playlist_any(make_client(config), playlist_id)
     except Exception as exc:
         print(f"Spotify error: {exc}", file=sys.stderr)
         return 1
 
     out_dir = playlist_folder(Path(args.out), name)
+    if notice:
+        print(f"note: {notice}")
     print(f"Playlist '{name}': {len(tracks)} tracks -> {out_dir}")
     results: list[TrackResult] = []
     interrupted = False

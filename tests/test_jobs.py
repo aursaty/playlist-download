@@ -234,3 +234,28 @@ def test_same_track_cannot_be_resolved_twice_concurrently(tmp_path):
     finally:
         release.set()
         worker.join(5)
+
+
+def test_notice_from_fetch_is_exposed_in_snapshot(tmp_path):
+    def fetch_with_notice(client, pid):
+        return "My List", [make_track(1)], "read from the public page"
+
+    mgr, job = started(tmp_path, fetch=fetch_with_notice)
+    assert mgr.snapshot(job)["notice"] == "read from the public page"
+
+
+def test_snapshot_notice_empty_when_fetch_returns_two_values(tmp_path):
+    mgr, job = started(tmp_path)
+    assert mgr.snapshot(job)["notice"] == ""
+
+
+def test_job_runs_without_a_client_when_nobody_is_logged_in(tmp_path):
+    seen = []
+
+    def fetch(client, pid):
+        seen.append(client)
+        return "Public", [make_track(1)]
+
+    mgr = JobManager(tmp_path, get_client=lambda: None, process=fake_process, fetch=fetch, place=Placer())
+    job = mgr.start(URL, 70.0, background=False)
+    assert seen == [None] and mgr.snapshot(job)["status"] in ("review", "done")

@@ -36,7 +36,7 @@ def main(argv: list[str] | None = None) -> int:
               "the Spotify login will not come back to this app.", file=sys.stderr)
 
     auth = WebAuth(config, Path(args.cache))
-    manager = JobManager(Path(args.out), auth.client)
+    manager = JobManager(Path(args.out), lambda: auth.client() if auth.connected() else None)
     server = create_server(AppContext(manager, auth), args.host, args.port)
     print(f"vibedl is running: http://127.0.0.1:{args.port}")
     print(f"Spotify redirect URI to register: {config.web_redirect_uri}")

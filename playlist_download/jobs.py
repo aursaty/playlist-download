@@ -9,7 +9,7 @@ from playlist_download.models import Candidate
 from playlist_download.naming import playlist_folder
 from playlist_download.pipeline import TagError, iter_pipeline, place_download, process_track
 from playlist_download.report import TrackResult, summary, write_reports
-from playlist_download.spotify import fetch_playlist, parse_playlist_id
+from playlist_download.spotify import fetch_playlist_any, parse_playlist_id
 from playlist_download.youtube import is_youtube_url, youtube_id
 
 ACTIVE = ("starting", "running")
@@ -32,12 +32,13 @@ class Job:
     resolutions: dict[int, str] = field(default_factory=dict)  # position -> accepted | skipped
     busy: set[int] = field(default_factory=set)  # positions whose manual download is in flight
     error: str | None = None
+    notice: str = ""
     thread: threading.Thread | None = None
     lock: threading.RLock = field(default_factory=threading.RLock)
 
 
 class JobManager:
-    def __init__(self, base_dir: Path, get_client: Callable, process=process_track, fetch=fetch_playlist,
+    def __init__(self, base_dir: Path, get_client: Callable, process=process_track, fetch=fetch_playlist_any,
                  place=place_download):
         self.base_dir = Path(base_dir)
         self.get_client = get_client
@@ -70,10 +71,12 @@ class JobManager:
         try:
             with job.lock:
                 job.status = "running"
-            name, tracks = self.fetch(self.get_client(), playlist_id)
+            fetched = self.fetch(self.get_client(), playlist_id)  # (name, tracks[, notice])
+            name, tracks = fetched[0], fetched[1]
+            notice = fetched[2] if len(fetched) > 2 else ""
             out_dir = playlist_folder(self.base_dir, name)
             with job.lock:
-                job.name, job.total, job.out_dir = name, len(tracks), out_dir
+                job.name, job.total, job.out_dir, job.notice = name, len(tracks), out_dir, notice
             for result in iter_pipeline(tracks, out_dir, job.threshold, process=self.process):
                 with job.lock:
                     job.results.append(result)
@@ -158,7 +161,7 @@ class JobManager:
                     review.append(self._card(r, resolution))
             return {
                 "id": job.id, "status": job.status, "name": job.name, "total": job.total,
-                "processed": len(job.results), "error": job.error, "items": items, "review": review,
+                "processed": len(job.results), "error": job.error, "notice": job.notice, "items": items, "review": review,
                 "pending": sum(1 for r in job.results if self._is_pending(job, r)),
                 "summary": summary(job.results) if job.results else "",
                 "can_archive": bool(job.out_dir and job.out_dir.is_dir() and any(job.out_dir.glob("*.mp3"))),
