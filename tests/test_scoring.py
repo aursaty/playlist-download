@@ -110,3 +110,45 @@ def test_title_with_many_extra_words_is_not_a_perfect_match():
 def test_official_audio_suffix_not_penalized():
     cand = make_cand(title="The Weeknd - Blinding Lights (Official Audio)", channel="The Weeknd")
     assert score_candidate(make_track(), cand) >= 85
+
+
+def test_cyrillic_artist_matches_latin_spotify_artist():
+    track = make_track(title="Hip-Hop", artists=("Boombox",), duration_ms=229000)
+    cand = make_cand(title="Hip-Hop", channel="БумБокс", source="ytmusic", duration_s=230)
+    assert score_candidate(track, cand) >= 90
+
+
+def test_cyrillic_title_and_artist_match_latin_artist():
+    track = make_track(title="Поп корн", artists=("Tartak",), duration_ms=194000)
+    cand = make_cand(title="Поп Корн", channel="Тартак", source="ytmusic", duration_s=195)
+    assert score_candidate(track, cand) >= 90
+
+
+def test_unrelated_title_with_artist_word_capped_below_threshold():
+    track = make_track(title="Hip-Hop", artists=("Boombox",), duration_ms=229000)
+    cand = make_cand(title="The Boombox Saints", channel="RedCloud - Topic", duration_s=225)
+    assert score_candidate(track, cand) < 70
+
+
+def test_latin_title_matches_cyrillic_transliteration():
+    track = make_track(title="Pop Korn", artists=("Tartak",), duration_ms=194000)
+    cand = make_cand(title="Поп Корн", channel="Тартак", duration_s=194)
+    assert score_candidate(track, cand) >= 90
+
+
+def test_different_artist_other_script_still_rejected():
+    track = make_track(title="Hip-Hop", artists=("Boombox",), duration_ms=229000)
+    cand = make_cand(title="Hip-Hop", channel="Тартак", duration_s=229)
+    assert score_candidate(track, cand) < 70
+
+
+def test_mix_version_penalized_when_not_in_spotify_title():
+    track = make_track(title="Pop Corn", artists=("Tartak",), duration_ms=194000)
+    cand = make_cand(title="Pop Corn (VS & FDR POP BASS MIX)", channel="Tartak", duration_s=194)
+    assert score_candidate(track, cand) < 70
+
+
+def test_mix_not_penalized_when_in_spotify_title():
+    track = make_track(title="Pop Corn (Radio Mix)", artists=("Tartak",), duration_ms=194000)
+    cand = make_cand(title="Pop Corn (Radio Mix)", channel="Tartak", duration_s=194)
+    assert score_candidate(track, cand) >= 90
