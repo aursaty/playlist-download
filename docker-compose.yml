@@ -1,0 +1,14 @@
+services:
+  vibedl:
+    build: .
+    image: vibedl
+    restart: unless-stopped
+    env_file: .env                      # SPOTIFY_CLIENT_ID (and optional WEB_REDIRECT_URI)
+    ports:
+      - "127.0.0.1:8000:8000"           # only this machine can open the app
+    volumes:
+      - ./downloads:/data/downloads     # finished mp3s, reports and zips come from here
+      - vibedl-auth:/data/auth          # Spotify login token, so you log in once
+
+volumes:
+  vibedl-auth:

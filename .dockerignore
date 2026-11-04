@@ -1,0 +1,14 @@
+.venv
+.git
+.env
+.cache
+.cache-web
+downloads
+data
+__pycache__
+*.pyc
+.pytest_cache
+.superpowers
+.hallmark
+docs
+tests

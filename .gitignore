@@ -5,3 +5,6 @@ __pycache__/
 .venv/
 .superpowers/
 .pytest_cache/
+.cache-web
+.hallmark/
+data/

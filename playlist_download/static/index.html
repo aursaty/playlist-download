@@ -1,2 +1,527 @@
 <!doctype html>
-<meta charset="utf-8"><title>placeholder</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vibedl</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='10' fill='%238a4dff'/%3E%3Cpath d='M8 20v-8M13 24V8M18 21V11M23 18v-4' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500&family=Onest:wght@400&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Ultraviolet (deal 1/3, seed playful-vibe-coded-local-web-9313·30933af6·2026-11-04·r0)
+ * nav: top bar, wordmark left and the spotify state right · signature: the swipe deck, a card you drag to take, skip or try the next match · states: connect, empty, loading, error, full, done · ultraviolet: night
+ * axes: dark/geometric-sans/cool · posture: committed · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P7 H7 E7 S8 R7 V7 · weakest: E, the card carries one violet action and the drag hints are plain lowercase labels, no glow or gradient to lean on */
+:root {
+  color-scheme: dark;
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.2rem; --text-xl: 1.44rem; --text-2xl: 1.728rem; --text-3xl: 2.074rem;
+  --text-display-s: 1.44rem; --text-display: 1.728rem; --text-section: 1.2rem; --text-title: 1rem; --text-lead: 1rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
+  --color-error: oklch(72% 0.16 27); --color-success: oklch(76% 0.12 150);
+  --container: 1100px; --gutter: 64px; --gap-columns: 32px;
+  --z-base: 1; --z-raised: 10; --z-sticky: 200;
+  --color-paper: oklch(14% 0.02 290); --color-paper-2: oklch(17.5% 0.025 290); --color-paper-3: oklch(21% 0.03 290);
+  --color-ink: oklch(92% 0.04 300); --color-ink-2: oklch(80% 0.05 300); --color-muted: oklch(68% 0.06 300);
+  --color-rule: oklch(28% 0.04 290); --color-rule-2: oklch(44% 0.07 292);
+  --color-accent: oklch(55% 0.25 290); --color-accent-deep: oklch(48% 0.24 290); --color-accent-soft: oklch(36% 0.09 293);
+  --color-accent-ink: oklch(97% 0.01 300); --color-focus: oklch(62% 0.22 290);
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif; --font-body: "Onest", ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 16px; --radius-pill: 999px; --rule-hair: 1px;
+  --shadow-card: 0 1px 2px oklch(5% 0.02 290 / 0.5);
+  --tracking-display: -0.03em; --display-weight: 500;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+html { scrollbar-color: var(--color-muted) var(--color-paper); scroll-padding-top: var(--space-3xl); }
+body { margin: 0; min-height: 100dvh; background: var(--color-paper); color: var(--color-ink); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; -webkit-font-smoothing: antialiased; caret-color: var(--color-accent); }
+::selection { background: color-mix(in oklab, var(--color-accent) 25%, transparent); }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+a:hover { color: var(--color-focus); }
+h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: var(--display-weight, 700); font-synthesis: none; letter-spacing: var(--tracking-display); line-height: 1.05; overflow-wrap: break-word; min-width: 0; text-wrap: balance; text-transform: lowercase; }
+h1 { max-width: 20ch; font-size: var(--text-3xl); } h2 { max-width: 30ch; font-size: var(--text-xl); } h3 { max-width: 40ch; font-size: var(--text-lg); line-height: 1.2; }
+p { margin: 0; text-wrap: pretty; }
+p:not([class]) { max-width: 65ch; }
+img { max-width: 100%; height: auto; display: block; }
+svg { display: block; }
+[hidden] { display: none !important; }
+button, input { font: inherit; }
+.container { width: 100%; max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); }
+.num, .figure { font-variant-numeric: tabular-nums; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 60rem) { :root { --gutter: 24px; } }
+@media (max-width: 40rem) { :root { --gutter: 16px; --gap-columns: 16px; } }
+@media (prefers-reduced-motion: reduce) { *:not(.keep-motion), *:not(.keep-motion)::before, *:not(.keep-motion)::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+
+/* controls */
+.btn, .pill { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs); border: 0; border-radius: var(--radius-pill); font: 500 var(--text-sm)/1 var(--font-display); text-transform: lowercase; text-decoration: none; cursor: pointer; transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out), opacity var(--dur-micro) var(--ease-out); }
+.btn { min-height: 44px; padding: 0 var(--space-lg); background: transparent; color: var(--color-ink); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); }
+.btn:hover { background: var(--color-paper-3); color: var(--color-ink); }
+.btn--primary { background: var(--color-accent); color: var(--color-accent-ink); box-shadow: none; }
+.btn--primary:hover { background: var(--color-accent-deep); color: var(--color-accent-ink); }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
+.pill { min-height: 28px; padding: 0 var(--space-sm); background: transparent; color: var(--color-ink-2); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); cursor: default; white-space: nowrap; }
+.pill--done { background: var(--color-accent-soft); color: var(--color-ink); box-shadow: none; }
+.pill--fail { color: var(--color-ink); }
+.pill--quiet { color: var(--color-muted); box-shadow: inset 0 0 0 1.5px var(--color-rule); }
+.field { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
+.input { flex: 1 1 18rem; min-width: 0; min-height: 52px; padding: 0 var(--space-lg); border: 0; border-radius: var(--radius-pill); background: var(--color-paper-2); color: var(--color-ink); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); transition: box-shadow var(--dur-micro) var(--ease-out); }
+.input::placeholder { color: var(--color-muted); }
+.input:hover { box-shadow: inset 0 0 0 1.5px var(--color-muted); }
+.input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; box-shadow: inset 0 0 0 1.5px var(--color-ink); }
+.input--sm { min-height: 44px; flex-basis: 14rem; }
+.label { font: 500 var(--text-sm)/1.2 var(--font-display); color: var(--color-muted); text-transform: lowercase; }
+
+/* shell */
+.bar { border-bottom: var(--rule-hair) solid var(--color-rule); }
+.bar .container { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); min-height: 64px; }
+.brand { font: 500 var(--text-xl)/1 var(--font-display); letter-spacing: var(--tracking-display); text-transform: lowercase; }
+.bar-actions { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; justify-content: flex-end; }
+main.container { padding-block: var(--space-xl) var(--space-3xl); display: grid; gap: var(--space-xl); }
+.stack { display: grid; gap: var(--space-md); align-content: start; }
+.lead { color: var(--color-ink-2); max-width: 52ch; }
+.notice { padding: var(--space-md) var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-2); color: var(--color-error); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); }
+
+/* start + connect */
+.intro { display: grid; gap: var(--space-lg); padding-block: var(--space-xl) var(--space-md); }
+.intro .field { max-width: 46rem; }
+.fine { color: var(--color-muted); font-size: var(--text-sm); }
+
+/* progress */
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
+.figure { font: 300 var(--text-3xl)/1 var(--font-display); letter-spacing: var(--tracking-display); }
+.figure small { font: 500 var(--text-sm)/1 var(--font-display); color: var(--color-muted); margin-left: var(--space-xs); text-transform: lowercase; letter-spacing: 0; }
+.meter { height: 4px; border-radius: var(--radius-pill); background: var(--color-rule); overflow: hidden; }
+.meter > i { display: block; height: 100%; background: var(--color-accent); transform-origin: left center; transform: scaleX(var(--p, 0)); transition: transform var(--dur-short) var(--ease-out); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font: 500 var(--text-sm)/1.2 var(--font-display); color: var(--color-muted); padding: var(--space-xs) var(--space-sm); border-bottom: var(--rule-hair) solid var(--color-rule); text-transform: lowercase; }
+td { padding: var(--space-sm); border-bottom: var(--rule-hair) solid var(--color-rule); vertical-align: middle; }
+td.num { color: var(--color-muted); width: 3.5rem; }
+td.state { text-align: right; width: 1%; white-space: nowrap; }
+td.why { color: var(--color-muted); font-size: var(--text-sm); }
+.skel { display: block; height: 1em; border-radius: var(--radius-pill); background: var(--color-paper-3); animation: pulse 1.4s var(--ease-in-out) infinite; }
+@keyframes pulse { 50% { opacity: 0.4; } }
+details > summary { cursor: pointer; font: 500 var(--text-md)/1.2 var(--font-display); text-transform: lowercase; padding-block: var(--space-xs); }
+details > summary::marker { color: var(--color-muted); }
+.tablewrap { overflow-x: auto; }
+
+/* the deck */
+.deck-wrap { display: grid; gap: var(--space-md); }
+.deck { position: relative; isolation: isolate; }
+.deck.stacked::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: var(--radius-card); background: var(--color-paper-3); transform: translateY(10px) scale(0.965); }
+.card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--gap-columns); padding: var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-2); box-shadow: var(--shadow-card); touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; will-change: transform; }
+.card.dragging { cursor: grabbing; transition: none; }
+.card.settle { transition: transform var(--dur-short) var(--ease-out); }
+.card[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
+.side { display: grid; gap: var(--space-sm); align-content: start; min-width: 0; }
+.cover { width: 132px; aspect-ratio: 1; border-radius: var(--radius-card); background: var(--color-paper-3); object-fit: cover; outline: 1px solid var(--color-rule); outline-offset: -1px; }
+.meta { color: var(--color-ink-2); }
+.meta .num { color: var(--color-muted); }
+.sep { height: var(--rule-hair); background: var(--color-rule); border: 0; margin: 0; }
+.player { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-card); background: var(--color-paper-3); overflow: hidden; display: grid; place-items: center; }
+.player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.cand-title { font: 500 var(--text-lg)/1.2 var(--font-display); overflow-wrap: anywhere; text-transform: none; letter-spacing: var(--tracking-display); }
+.cand-meta { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+.hint { position: absolute; top: var(--space-md); padding: var(--space-xs) var(--space-md); border-radius: var(--radius-pill); font: 500 var(--text-sm)/1 var(--font-display); text-transform: lowercase; opacity: 0; pointer-events: none; z-index: var(--z-raised); }
+.hint--yes { right: var(--space-md); background: var(--color-accent); color: var(--color-accent-ink); }
+.hint--next { left: var(--space-md); background: var(--color-paper-3); color: var(--color-ink); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); }
+.hint--skip { left: 50%; translate: -50% 0; background: var(--color-paper-3); color: var(--color-ink); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; }
+.actions .grow { flex: 1; }
+.paste { display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center; }
+.empty-cand { display: grid; gap: var(--space-sm); align-content: center; min-height: 12rem; padding: var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-3); }
+.done { display: grid; gap: var(--space-lg); padding: var(--space-xl); border-radius: var(--radius-card); background: var(--color-paper-2); }
+@media (max-width: 48rem) { .card { grid-template-columns: minmax(0, 1fr); } .cover { width: 96px; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="container">
+    <span class="brand">vibedl</span>
+    <div class="bar-actions" id="bar"></div>
+  </div>
+</header>
+<main class="container" id="app" aria-live="polite">
+  <noscript><p>vibedl needs javascript to run the page.</p></noscript>
+</main>
+
+<script>
+"use strict";
+const $app = document.getElementById("app");
+const $bar = document.getElementById("bar");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SWIPE = 110;
+
+const state = {
+  auth: null,        // {connected, login_url?}
+  job: null,         // latest snapshot
+  jobId: null,
+  cand: {},          // position -> candidate index shown
+  listening: false,
+  busy: false,
+  error: "",
+  starting: false,
+};
+let pollTimer = null;
+
+/* ---------- helpers ---------- */
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? undefined : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  let data = null;
+  try { data = await res.json(); } catch (_) { /* not json */ }
+  if (!res.ok) throw new Error((data && data.error) || `request failed (${res.status})`);
+  return data;
+}
+
+const fmt = (s) => (s == null ? "?" : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`);
+const sourceName = { ytmusic: "youtube music", youtube: "youtube", manual: "your link" };
+
+function lengthNote(c, t) {
+  if (c.duration_s == null) return "length unknown";
+  const d = c.duration_s - t.duration_s;
+  return Math.abs(d) <= 2 ? "same length" : `${Math.abs(d)}s ${d > 0 ? "longer" : "shorter"}`;
+}
+
+/* ---------- state transitions ---------- */
+function setJobId(id) {
+  state.jobId = id;
+  history.replaceState(null, "", id ? `#job=${id}` : location.pathname);
+}
+
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  if (!state.jobId) return;
+  pollTimer = setTimeout(poll, 900);
+}
+
+async function poll() {
+  try {
+    state.job = await api(`/api/jobs/${state.jobId}`);
+    state.error = "";
+  } catch (e) {
+    state.error = e.message;
+    if (/unknown job/i.test(e.message)) { setJobId(null); state.job = null; }
+  }
+  render();
+  if (state.job && (state.job.status === "starting" || state.job.status === "running")) schedulePoll();
+}
+
+async function startJob(url) {
+  state.error = ""; state.starting = true; render();
+  try {
+    const { id } = await api("/api/jobs", { url });
+    setJobId(id); state.job = null; state.cand = {}; state.listening = false;
+    await poll();
+  } catch (e) {
+    state.error = e.message;
+  } finally {
+    state.starting = false; render();
+  }
+}
+
+function pending() { return state.job ? state.job.review.filter((c) => !c.resolution) : []; }
+
+async function resolve(action, extra) {
+  const card = pending()[0];
+  if (!card || state.busy) return;
+  state.busy = true; state.error = ""; render();
+  try {
+    state.job = await api(`/api/jobs/${state.jobId}/resolve`, { position: card.position, action, ...extra });
+    state.listening = false;
+  } catch (e) {
+    state.error = e.message;
+  } finally {
+    state.busy = false; render();
+  }
+}
+
+function accept() {
+  const card = pending()[0]; if (!card) return;
+  const i = state.cand[card.position] || 0;
+  if (i < card.candidates.length) resolve("accept", { candidate_index: i });
+}
+function skip() { resolve("skip"); }
+function step(delta) {
+  const card = pending()[0]; if (!card) return;
+  const i = state.cand[card.position] || 0;
+  state.cand[card.position] = Math.max(0, Math.min(card.candidates.length, i + delta));
+  state.listening = false; render();
+}
+
+/* ---------- views ---------- */
+function barView() {
+  $bar.replaceChildren();
+  if (!state.auth) return;
+  if (state.auth.connected) {
+    $bar.append(h("span", { class: "pill pill--quiet", text: "spotify connected" }));
+  } else {
+    $bar.append(h("a", { class: "btn btn--primary", href: state.auth.login_url, text: "connect spotify" }));
+  }
+  if (state.jobId) $bar.append(h("button", { class: "btn", type: "button", text: "new playlist", onclick: reset }));
+}
+
+function reset() {
+  clearTimeout(pollTimer); setJobId(null);
+  state.job = null; state.cand = {}; state.error = ""; state.listening = false; render();
+}
+
+function errorView() {
+  return state.error ? h("p", { class: "notice", role: "alert", text: state.error }) : null;
+}
+
+function startView() {
+  const connected = state.auth && state.auth.connected;
+  const input = h("input", {
+    class: "input", type: "url", name: "playlist", id: "playlist", required: true, autocomplete: "off",
+    placeholder: "paste a spotify playlist link", "aria-label": "spotify playlist link", disabled: !connected || state.starting,
+  });
+  const form = h("form", { class: "field", onsubmit: (e) => { e.preventDefault(); if (input.value.trim()) startJob(input.value.trim()); } },
+    input,
+    h("button", { class: "btn btn--primary", type: "submit", disabled: !connected || state.starting, text: state.starting ? "starting" : "get the songs" }));
+  return h("section", { class: "intro" },
+    h("h1", { text: "paste a playlist, get the songs" }),
+    h("p", { class: "lead", text: connected
+      ? "private playlists work. songs that cannot be matched on their own land in a swipe deck where you can listen and pick."
+      : "connect your spotify account first, so private playlists can be read." }),
+    form,
+    h("p", { class: "fine", text: "files are saved on this machine as numbered mp3s, in playlist order." }),
+    errorView());
+}
+
+function statusPill(item) {
+  if (item.resolution === "skipped") return h("span", { class: "pill pill--quiet", text: "skipped" });
+  if (item.resolution === "accepted") return h("span", { class: "pill pill--done", text: "picked by you" });
+  if (item.status === "downloaded") return h("span", { class: "pill pill--done", text: "downloaded" });
+  if (item.status === "skipped_existing") return h("span", { class: "pill pill--done", text: "already there" });
+  return h("span", { class: "pill pill--fail", text: "needs a look" });
+}
+
+function tableView(job, open) {
+  const rows = job.items.map((it) => h("tr", {},
+    h("td", { class: "num", text: String(it.position).padStart(String(job.total).length, "0") }),
+    h("td", { text: it.label }),
+    h("td", { class: "why", text: it.status === "failed" && !it.resolution ? (it.reason || "") : "" }),
+    h("td", { class: "state" }, statusPill(it))));
+  if (job.status === "running" || job.status === "starting") {
+    const left = Math.min(3, Math.max(0, job.total - job.items.length));
+    for (let i = 0; i < left; i++) {
+      rows.push(h("tr", { "aria-hidden": "true" }, h("td", { class: "num" }, h("span", { class: "skel" })),
+        h("td", {}, h("span", { class: "skel" })), h("td"), h("td", { class: "state" }, h("span", { class: "skel", style: "width:5rem" }))));
+    }
+  }
+  const table = h("div", { class: "tablewrap" }, h("table", {},
+    h("caption", { class: "visually-hidden", text: "songs in the playlist" }),
+    h("thead", {}, h("tr", {}, h("th", { text: "no" }), h("th", { text: "song" }), h("th", { text: "note" }), h("th", { text: "state" }))),
+    h("tbody", {}, rows)));
+  return h("details", { open: open ? true : null }, h("summary", { text: `all songs (${job.items.length})` }), table);
+}
+
+function progressView(job) {
+  const total = job.total || 0;
+  const p = total ? job.processed / total : 0;
+  return h("section", { class: "stack" },
+    h("div", { class: "head" },
+      h("h2", { text: job.status === "starting" || !job.name ? "reading your playlist" : job.name }),
+      h("span", { class: "figure num" }, `${job.processed}`, h("small", { text: total ? `of ${total} songs` : "songs" }))),
+    h("div", { class: "meter", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": String(total || 1), "aria-valuenow": String(job.processed) },
+      h("i", { style: `--p:${p}` })),
+    job.items.length || total ? tableView(job, true)
+      : h("div", {}, h("span", { class: "skel" }), h("span", { class: "skel", style: "margin-top:12px;width:70%" })));
+}
+
+function archiveButton(job, primary) {
+  if (!job.can_archive) return null;
+  return h("a", { class: primary ? "btn btn--primary" : "btn", href: `/api/jobs/${job.id}/archive`, download: "", text: "download zip" });
+}
+
+function cardView(card, remaining) {
+  const t = card.track;
+  const idx = state.cand[card.position] || 0;
+  const c = card.candidates[idx];
+  const left = remaining - 1;
+
+  const spotify = h("div", { class: "side" },
+    h("span", { class: "label", text: "spotify wants" }),
+    t.cover_url ? h("img", { class: "cover", src: t.cover_url, alt: "", draggable: "false", referrerpolicy: "no-referrer" }) : null,
+    h("h3", { text: t.title }),
+    h("p", { class: "meta", text: t.artists.join(", ") }),
+    h("p", { class: "meta" }, t.album || "", t.year ? ` (${t.year})` : "", " ", h("span", { class: "num", text: fmt(t.duration_s) })));
+
+  let youtube;
+  if (c) {
+    const player = h("div", { class: "player" });
+    if (state.listening && c.video_id) {
+      player.append(h("iframe", {
+        src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(c.video_id)}?autoplay=1&rel=0`,
+        title: `listen: ${c.title}`, allow: "autoplay; encrypted-media; picture-in-picture", allowfullscreen: true, referrerpolicy: "strict-origin-when-cross-origin",
+      }));
+    } else {
+      player.append(h("button", { class: "btn btn--primary", type: "button", text: "listen", onclick: () => { state.listening = true; render(); } }));
+    }
+    youtube = h("div", { class: "side" },
+      h("span", { class: "label", text: `candidate ${idx + 1} of ${card.candidates.length}` }),
+      player,
+      h("p", { class: "cand-title", text: c.title }),
+      h("div", { class: "cand-meta" },
+        h("span", { class: "pill", text: c.channel || "unknown channel" }),
+        h("span", { class: "pill", text: sourceName[c.source] || c.source }),
+        h("span", { class: "pill num", text: `${fmt(c.duration_s)}, ${lengthNote(c, t)}` }),
+        h("span", { class: "pill num", text: `match ${Math.round(c.score)} of 100` })),
+      h("a", { class: "fine", href: c.url, target: "_blank", rel: "noopener noreferrer", text: "open in a new tab" }));
+  } else {
+    youtube = h("div", { class: "side" }, h("div", { class: "empty-cand" },
+      h("h3", { text: card.candidates.length ? "that was every candidate" : "nothing came back" }),
+      h("p", { class: "meta", text: "paste a link to the right video, or skip this song." })));
+  }
+
+  const link = h("input", { class: "input input--sm", type: "url", placeholder: "or paste a youtube link", "aria-label": "youtube link for this song" });
+  const paste = h("form", { class: "paste", onsubmit: (e) => { e.preventDefault(); if (link.value.trim()) resolve("accept", { url: link.value.trim() }); } },
+    link, h("button", { class: "btn", type: "submit", text: "use this link" }));
+
+  const el = h("article", { class: "card", "aria-busy": state.busy ? "true" : null, "aria-label": `review ${t.title}` },
+    h("span", { class: "hint hint--yes", text: "this one" }),
+    h("span", { class: "hint hint--next", text: "next match" }),
+    h("span", { class: "hint hint--skip", text: "skip" }),
+    spotify, youtube);
+  attachSwipe(el);
+
+  const actions = h("div", { class: "actions" },
+    h("button", { class: "btn", type: "button", text: "back", disabled: idx === 0, onclick: () => step(-1) }),
+    h("button", { class: "btn", type: "button", text: "next match", disabled: idx >= card.candidates.length, onclick: () => step(1) }),
+    h("button", { class: "btn", type: "button", text: "skip song", onclick: skip }),
+    h("span", { class: "grow" }),
+    h("button", { class: "btn btn--primary", type: "button", text: "this one", disabled: !c, onclick: accept }));
+
+  return h("div", { class: "deck-wrap" },
+    h("div", { class: `deck${left > 0 ? " stacked" : ""}` }, el),
+    actions, paste,
+    h("p", { class: "fine", text: "drag the card: right takes it, left shows the next match, down skips. keys: arrows and space." }));
+}
+
+function deckView(job) {
+  const open = pending();
+  const sorted = job.review.length - open.length;
+  return h("section", { class: "stack" },
+    h("div", { class: "head" },
+      h("h2", { text: open.length ? "these need your ear" : "all sorted" }),
+      h("span", { class: "figure num" }, `${open.length}`, h("small", { text: `left, ${sorted} sorted` }))),
+    open.length ? cardView(open[0], open.length) : null);
+}
+
+function doneView(job) {
+  const ok = job.items.filter((i) => i.status === "downloaded" || i.status === "skipped_existing").length;
+  const skipped = job.items.filter((i) => i.resolution === "skipped").length;
+  return h("section", { class: "done" },
+    h("h2", { text: "your playlist is ready" }),
+    h("p", { class: "figure num" }, `${ok}`, h("small", { text: `of ${job.total} songs${skipped ? `, ${skipped} skipped` : ""}` })),
+    h("p", { class: "lead", text: "zip has the numbered mp3s in playlist order. skipped songs leave a gap in the numbering." }),
+    h("div", { class: "actions" }, archiveButton(job, true) || h("p", { class: "fine", text: "no finished songs to zip yet." }),
+      h("button", { class: "btn", type: "button", text: "start another", onclick: reset })));
+}
+
+function render() {
+  barView();
+  const job = state.job;
+  const view = [];
+  if (!state.auth) {
+    view.push(h("section", { class: "intro" }, h("span", { class: "skel", style: "width:60%;height:2rem" }), h("span", { class: "skel", style: "width:40%" })));
+  } else if (!state.jobId) {
+    view.push(startView());
+  } else if (!job) {
+    view.push(h("section", { class: "stack" }, h("h2", { text: "reading your playlist" }), h("div", { class: "meter" }, h("i")), errorView()));
+  } else if (job.status === "error") {
+    view.push(h("section", { class: "stack" }, h("h2", { text: "that did not work" }),
+      h("p", { class: "notice", role: "alert", text: job.error || "unknown error" }),
+      h("div", { class: "actions" }, h("button", { class: "btn btn--primary", type: "button", text: "try again", onclick: reset }))));
+  } else {
+    view.push(errorView());
+    if (job.status === "starting" || job.status === "running") {
+      view.push(progressView(job));
+    } else {
+      view.push(job.status === "review" ? deckView(job) : doneView(job));
+      if (job.status === "review") {
+        view.push(h("div", { class: "actions" }, archiveButton(job, false)));
+      }
+      view.push(tableView(job, false));
+    }
+  }
+  $app.replaceChildren(...view.filter(Boolean));
+}
+
+/* ---------- swipe ---------- */
+function attachSwipe(el) {
+  let sx = 0, sy = 0, dragging = false;
+  const hints = { yes: el.querySelector(".hint--yes"), next: el.querySelector(".hint--next"), skip: el.querySelector(".hint--skip") };
+  const show = (dx, dy) => {
+    const vertical = dy > Math.abs(dx);
+    hints.yes.style.opacity = !vertical && dx > 0 ? Math.min(1, dx / SWIPE) : 0;
+    hints.next.style.opacity = !vertical && dx < 0 ? Math.min(1, -dx / SWIPE) : 0;
+    hints.skip.style.opacity = vertical && dy > 0 ? Math.min(1, dy / SWIPE) : 0;
+  };
+  el.addEventListener("pointerdown", (e) => {
+    if (state.busy || e.button > 0 || e.target.closest("button, input, a, iframe, form")) return;
+    dragging = true; sx = e.clientX; sy = e.clientY;
+    el.classList.remove("settle"); el.classList.add("dragging");
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - sx, dy = Math.max(0, e.clientY - sy);
+    el.style.transform = `translate(${dx}px, ${dy}px)${reduceMotion ? "" : ` rotate(${dx / 40}deg)`}`;
+    show(dx, dy);
+  });
+  const end = (e) => {
+    if (!dragging) return;
+    dragging = false; el.classList.remove("dragging");
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    const vertical = dy > Math.abs(dx);
+    if (vertical && dy > SWIPE) return skip();
+    if (!vertical && dx > SWIPE) return accept();
+    if (!vertical && dx < -SWIPE) return step(1);
+    el.classList.add("settle"); el.style.transform = ""; show(0, 0);
+  };
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!state.job || state.job.status !== "review" || state.busy) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); accept(); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); step(1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); step(-1); }
+  else if (e.key === "ArrowDown") { e.preventDefault(); skip(); }
+  else if (e.key === " " && !e.target.closest("button, a")) { e.preventDefault(); state.listening = !state.listening; render(); }
+});
+
+/* ---------- boot ---------- */
+(async function boot() {
+  render();
+  try { state.auth = await api("/api/auth"); } catch (e) { state.auth = { connected: false, login_url: "#" }; state.error = e.message; }
+  const m = location.hash.match(/job=([0-9a-z]+)/i);
+  if (m && state.auth.connected) { state.jobId = m[1]; render(); await poll(); } else { render(); }
+})();
+</script>
+</body>
+</html>
