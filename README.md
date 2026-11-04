@@ -57,7 +57,9 @@ pip install -r requirements.txt
 ## 3. Create the Spotify app
 
 1. Open https://developer.spotify.com/dashboard and create an app.
-2. Add this Redirect URI exactly: `http://127.0.0.1:8888/callback`
+2. Add these Redirect URIs exactly (one is for the web app, one for the command line):
+   - `http://127.0.0.1:8000/callback` (web app)
+   - `http://127.0.0.1:8888/callback` (command line)
 3. Copy the app's **Client ID**.
 4. Copy `.env.example` to `.env` and fill it in:
 
@@ -69,7 +71,64 @@ SPOTIFY_REDIRECT_URI=http://127.0.0.1:8888/callback
 
 Windows: `copy .env.example .env`. Linux: `cp .env.example .env`.
 
-## 4. Run
+## Web app (vibedl)
+
+A local page: paste a playlist link, watch the songs download, then swipe through the songs that could
+not be matched on their own, listen to the candidates and pick the right one. At the end you can download a
+zip with the finished playlist.
+
+```bash
+python app.py                  # Windows without activating the venv: .venv\Scripts\python app.py
+```
+
+Open http://127.0.0.1:8000 and press **connect spotify** once (the login happens in the page, token is
+stored in `.cache-web`). Then:
+
+1. Paste the playlist link and press **get the songs**.
+2. Songs that match confidently download by themselves. The rest appear as cards.
+3. On a card, press **listen** to hear the candidate. Then:
+
+| Action | Mouse / touch | Keyboard |
+|---|---|---|
+| take this candidate | drag right, or **this one** | right arrow |
+| show the next candidate | drag left, or **next match** | left arrow |
+| previous candidate | **back** | up arrow |
+| skip the song | drag down, or **skip song** | down arrow |
+| listen | **listen** | space |
+
+   Know the right video? Paste its YouTube link under the card and press **use this link**.
+4. When every card is sorted, press **download zip**. The zip holds the numbered mp3s in playlist order.
+   Skipped songs leave a gap in the numbering. The zip button is also available while you are still
+   reviewing, with what is finished so far.
+
+Files are written to `downloads/<playlist name>/` as with the command line, and re-running a playlist only
+fetches what is missing. One playlist is processed at a time.
+
+Options: `--host`, `--port` (default 8000), `--out` (download folder), `--cache` (login token file). The same
+can be set with `HOST`, `PORT`, `DOWNLOAD_DIR`, `SPOTIFY_CACHE_PATH`. If you change the port, also set
+`WEB_REDIRECT_URI` in `.env` and register that URI in the Spotify dashboard.
+
+## Docker
+
+Needs Docker with Compose. ffmpeg is included in the image, so you do not install it on the host.
+
+```bash
+cp .env.example .env           # Windows: copy .env.example .env   then set SPOTIFY_CLIENT_ID
+docker compose up --build
+```
+
+Open http://127.0.0.1:8000, connect Spotify once, and use it as described above. Finished files appear in
+`./downloads` on the host. The Spotify login token lives in the `vibedl-auth` volume, so it survives restarts.
+
+- The port is published on `127.0.0.1` only, so only this machine can reach the app. Do not expose it to a
+  network: it has no password.
+- To reach it under another host name, set `WEB_ALLOWED_HOSTS=name` in `.env`. Spotify only accepts
+  `http://127.0.0.1` or `https` redirect addresses, so set `WEB_REDIRECT_URI` to a matching one and register it.
+- On Linux, if `./downloads` is created by root, run `mkdir downloads` first, or start with
+  `UID=$(id -u) GID=$(id -g) docker compose up --build` after adding `user: "${UID}:${GID}"` to the service.
+- Update the downloader when YouTube changes something: `docker compose build --no-cache`.
+
+## 4. Run from the command line
 
 **Windows** (PowerShell):
 

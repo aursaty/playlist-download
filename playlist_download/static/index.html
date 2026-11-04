@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Paste a Spotify playlist link, download the songs as numbered mp3s, and swipe through the ones that need a manual match.">
 <title>vibedl</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='10' fill='%238a4dff'/%3E%3Cpath d='M8 20v-8M13 24V8M18 21V11M23 18v-4' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,13 +63,15 @@ button, input { font: inherit; }
 .btn:hover { background: var(--color-paper-3); color: var(--color-ink); }
 .btn--primary { background: var(--color-accent); color: var(--color-accent-ink); box-shadow: none; }
 .btn--primary:hover { background: var(--color-accent-deep); color: var(--color-accent-ink); }
+.btn:active { transform: translateY(1px); background: var(--color-paper-3); }
+.btn--primary:active { background: var(--color-accent-deep); }
 .btn[disabled], .btn[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
 .pill { min-height: 28px; padding: 0 var(--space-sm); background: transparent; color: var(--color-ink-2); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); cursor: default; white-space: nowrap; }
 .pill--done { background: var(--color-accent-soft); color: var(--color-ink); box-shadow: none; }
 .pill--fail { color: var(--color-ink); }
 .pill--quiet { color: var(--color-muted); box-shadow: inset 0 0 0 1.5px var(--color-rule); }
 .field { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
-.input { flex: 1 1 18rem; min-width: 0; min-height: 52px; padding: 0 var(--space-lg); border: 0; border-radius: var(--radius-pill); background: var(--color-paper-2); color: var(--color-ink); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); transition: box-shadow var(--dur-micro) var(--ease-out); }
+.input { flex: 1 1 18rem; min-width: 0; min-height: 52px; padding: 0 var(--space-lg); border: 0; border-radius: var(--radius-pill); background: var(--color-paper-2); color: var(--color-ink); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); }
 .input::placeholder { color: var(--color-muted); }
 .input:hover { box-shadow: inset 0 0 0 1.5px var(--color-muted); }
 .input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; box-shadow: inset 0 0 0 1.5px var(--color-ink); }
@@ -80,8 +83,8 @@ button, input { font: inherit; }
 .bar .container { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); min-height: 64px; }
 .brand { font: 500 var(--text-xl)/1 var(--font-display); letter-spacing: var(--tracking-display); text-transform: lowercase; }
 .bar-actions { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; justify-content: flex-end; }
-main.container { padding-block: var(--space-xl) var(--space-3xl); display: grid; gap: var(--space-xl); }
-.stack { display: grid; gap: var(--space-md); align-content: start; }
+main.container { padding-block: var(--space-xl) var(--space-3xl); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-md); align-content: start; }
 .lead { color: var(--color-ink-2); max-width: 52ch; }
 .notice { padding: var(--space-md) var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-2); color: var(--color-error); box-shadow: inset 0 0 0 1.5px var(--color-rule-2); }
 
@@ -109,10 +112,10 @@ details > summary::marker { color: var(--color-muted); }
 .tablewrap { overflow-x: auto; }
 
 /* the deck */
-.deck-wrap { display: grid; gap: var(--space-md); }
+.deck-wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
 .deck { position: relative; isolation: isolate; }
 .deck.stacked::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: var(--radius-card); background: var(--color-paper-3); transform: translateY(10px) scale(0.965); }
-.card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--gap-columns); padding: var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-2); box-shadow: var(--shadow-card); touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; will-change: transform; }
+.card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--gap-columns); padding: var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-2); color: var(--color-ink); box-shadow: var(--shadow-card); touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; will-change: transform; }
 .card.dragging { cursor: grabbing; transition: none; }
 .card.settle { transition: transform var(--dur-short) var(--ease-out); }
 .card[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
@@ -123,6 +126,7 @@ details > summary::marker { color: var(--color-muted); }
 .sep { height: var(--rule-hair); background: var(--color-rule); border: 0; margin: 0; }
 .player { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-card); background: var(--color-paper-3); overflow: hidden; display: grid; place-items: center; }
 .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.side h3 { text-transform: none; }
 .cand-title { font: 500 var(--text-lg)/1.2 var(--font-display); overflow-wrap: anywhere; text-transform: none; letter-spacing: var(--tracking-display); }
 .cand-meta { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
 .hint { position: absolute; top: var(--space-md); padding: var(--space-xs) var(--space-md); border-radius: var(--radius-pill); font: 500 var(--text-sm)/1 var(--font-display); text-transform: lowercase; opacity: 0; pointer-events: none; z-index: var(--z-raised); }
@@ -134,6 +138,7 @@ details > summary::marker { color: var(--color-muted); }
 .paste { display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center; }
 .empty-cand { display: grid; gap: var(--space-sm); align-content: center; min-height: 12rem; padding: var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-3); }
 .done { display: grid; gap: var(--space-lg); padding: var(--space-xl); border-radius: var(--radius-card); background: var(--color-paper-2); }
+@media (max-width: 40rem) { th.why, td.why { display: none; } }
 @media (max-width: 48rem) { .card { grid-template-columns: minmax(0, 1fr); } .cover { width: 96px; } }
 </style>
 </head>
@@ -332,7 +337,7 @@ function tableView(job, open) {
   }
   const table = h("div", { class: "tablewrap" }, h("table", {},
     h("caption", { class: "visually-hidden", text: "songs in the playlist" }),
-    h("thead", {}, h("tr", {}, h("th", { text: "no" }), h("th", { text: "song" }), h("th", { text: "note" }), h("th", { text: "state" }))),
+    h("thead", {}, h("tr", {}, h("th", { text: "no" }), h("th", { text: "song" }), h("th", { class: "why", text: "note" }), h("th", { text: "state" }))),
     h("tbody", {}, rows)));
   return h("details", { open: open ? true : null }, h("summary", { text: `all songs (${job.items.length})` }), table);
 }

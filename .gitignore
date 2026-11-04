@@ -8,3 +8,5 @@ __pycache__/
 .cache-web
 .hallmark/
 data/
+.playwright-mcp/
+app.log
