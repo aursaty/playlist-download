@@ -3,17 +3,12 @@ import sys
 from pathlib import Path
 
 from playlist_download.config import ConfigError, check_ffmpeg, load_config
-from playlist_download.naming import sanitize
+from playlist_download.naming import playlist_folder
 from playlist_download.pipeline import iter_pipeline, process_track
 from playlist_download.report import TrackResult, format_failed, summary, write_reports
 from playlist_download.spotify import fetch_playlist, make_client, parse_playlist_id
 
 DEFAULT_THRESHOLD = 70.0
-MAX_FOLDER_NAME = 60
-
-
-def playlist_folder(base: Path, name: str) -> Path:
-    return base / sanitize(name)[:MAX_FOLDER_NAME].rstrip(". ")
 
 
 def _label(result: TrackResult) -> str:
