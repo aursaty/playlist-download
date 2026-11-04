@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from dotenv import load_dotenv
 
 DEFAULT_REDIRECT_URI = "http://127.0.0.1:8888/callback"
+DEFAULT_WEB_REDIRECT_URI = "http://127.0.0.1:8000/callback"
 
 
 class ConfigError(Exception):
@@ -15,6 +16,7 @@ class ConfigError(Exception):
 class Config:
     client_id: str
     redirect_uri: str
+    web_redirect_uri: str = DEFAULT_WEB_REDIRECT_URI
 
 
 def load_config() -> Config:
@@ -23,7 +25,8 @@ def load_config() -> Config:
     if not client_id:
         raise ConfigError("SPOTIFY_CLIENT_ID missing. Set it in .env (Spotify app Client ID).")
     redirect_uri = os.environ.get("SPOTIFY_REDIRECT_URI", "").strip() or DEFAULT_REDIRECT_URI
-    return Config(client_id=client_id, redirect_uri=redirect_uri)
+    web_redirect_uri = os.environ.get("WEB_REDIRECT_URI", "").strip() or DEFAULT_WEB_REDIRECT_URI
+    return Config(client_id=client_id, redirect_uri=redirect_uri, web_redirect_uri=web_redirect_uri)
 
 
 def check_ffmpeg() -> None:

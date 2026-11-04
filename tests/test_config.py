@@ -27,3 +27,10 @@ def test_check_ffmpeg_missing_raises(monkeypatch):
     monkeypatch.setattr(config.shutil, "which", lambda name: None)
     with pytest.raises(ConfigError):
         check_ffmpeg()
+
+
+def test_web_redirect_uri_default_and_override(monkeypatch):
+    monkeypatch.setenv("SPOTIFY_CLIENT_ID", "abc")
+    assert load_config().web_redirect_uri == "http://127.0.0.1:8000/callback"
+    monkeypatch.setenv("WEB_REDIRECT_URI", "http://localhost:9000/callback")
+    assert load_config().web_redirect_uri == "http://localhost:9000/callback"

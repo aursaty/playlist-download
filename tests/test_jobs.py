@@ -192,3 +192,45 @@ def test_download_error_on_accept_keeps_track_unresolved(tmp_path):
         mgr.resolve(job.id, 2, "accept", candidate_index=0)
     snap = mgr.snapshot(job)
     assert snap["items"][1]["status"] == "failed" and snap["review"][0]["resolution"] is None
+
+
+def test_snapshot_not_blocked_while_accept_downloads(tmp_path):
+    entered, release = threading.Event(), threading.Event()
+
+    def slow_place(track, url, width, out_dir):
+        entered.set()
+        release.wait(5)
+        return Placer()(track, url, width, out_dir)
+
+    mgr, job = started(tmp_path, placer=slow_place)
+    worker = threading.Thread(target=lambda: mgr.resolve(job.id, 2, "accept", candidate_index=0))
+    worker.start()
+    try:
+        assert entered.wait(5)
+        done = threading.Event()
+        threading.Thread(target=lambda: (mgr.snapshot(job), done.set())).start()
+        assert done.wait(1), "snapshot blocked by an in-flight download"
+    finally:
+        release.set()
+        worker.join(5)
+    assert mgr.snapshot(job)["items"][1]["resolution"] == "accepted"
+
+
+def test_same_track_cannot_be_resolved_twice_concurrently(tmp_path):
+    entered, release = threading.Event(), threading.Event()
+
+    def slow_place(track, url, width, out_dir):
+        entered.set()
+        release.wait(5)
+        return Placer()(track, url, width, out_dir)
+
+    mgr, job = started(tmp_path, placer=slow_place)
+    worker = threading.Thread(target=lambda: mgr.resolve(job.id, 2, "accept", candidate_index=0))
+    worker.start()
+    try:
+        assert entered.wait(5)
+        with pytest.raises(ValueError, match="already being processed"):
+            mgr.resolve(job.id, 2, "skip")
+    finally:
+        release.set()
+        worker.join(5)

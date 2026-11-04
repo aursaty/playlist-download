@@ -30,6 +30,7 @@ class Job:
     total: int = 0
     results: list[TrackResult] = field(default_factory=list)
     resolutions: dict[int, str] = field(default_factory=dict)  # position -> accepted | skipped
+    busy: set[int] = field(default_factory=set)  # positions whose manual download is in flight
     error: str | None = None
     thread: threading.Thread | None = None
     lock: threading.RLock = field(default_factory=threading.RLock)
@@ -105,14 +106,29 @@ class JobManager:
                 raise ValueError("this track cannot be reviewed")
             if result.status == "downloaded":
                 raise ValueError("this track is already downloaded")
+            if position in job.busy:
+                raise ValueError("this track is already being processed")
             if action == "skip":
                 job.resolutions[position] = "skipped"
-            else:
-                chosen = self._pick_candidate(result, candidate_index, url)
-                self._accept(job, result, chosen)
-            write_reports(job.out_dir, job.results)
-            self._refresh_status(job)
+                self._save(job)
+                return self.snapshot(job)
+            chosen = self._pick_candidate(result, candidate_index, url)
+            job.busy.add(position)
+        try:
+            # the download runs without the lock so status polling stays responsive
+            self._download(job, result, chosen)
+        finally:
+            with job.lock:
+                job.busy.discard(position)
+        with job.lock:
+            result.status, result.chosen, result.reason = "downloaded", chosen, None
+            job.resolutions[position] = "accepted"
+            self._save(job)
         return self.snapshot(job)
+
+    def _save(self, job: Job) -> None:
+        write_reports(job.out_dir, job.results)
+        self._refresh_status(job)
 
     @staticmethod
     def _pick_candidate(result: TrackResult, index: int | None, url: str | None) -> Candidate:
@@ -124,13 +140,11 @@ class JobManager:
             raise ValueError("choose one of the candidates or paste a link")
         return result.candidates[index]
 
-    def _accept(self, job: Job, result: TrackResult, chosen: Candidate) -> None:
+    def _download(self, job: Job, result: TrackResult, chosen: Candidate) -> None:
         try:
             self.place(result.track, chosen.url, len(str(job.total)), job.out_dir)
         except (DownloadError, TagError, OSError) as exc:
             raise ResolveError(f"download failed: {exc}") from exc
-        result.status, result.chosen, result.reason = "downloaded", chosen, None
-        job.resolutions[result.position] = "accepted"
 
     def snapshot(self, job: Job) -> dict:
         with job.lock:
